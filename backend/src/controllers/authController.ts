@@ -1,4 +1,4 @@
-﻿import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import * as authService from "../services/authService";
 import { AuthRequest } from "../middleware/auth";
@@ -29,9 +29,10 @@ export async function login(req: Request, res: Response, next: NextFunction) {
   } catch (err) { next(err); }
 }
 
-export async function me(req: AuthRequest, res: Response, next: NextFunction) {
+export async function me(req: Request, res: Response, next: NextFunction) {
   try {
-    const user = await authService.getProfile(req.userId!);
+    const userId = (req as AuthRequest).userId!;
+    const user = await authService.getProfile(userId);
     res.json({ success: true, user });
   } catch (err) { next(err); }
 }

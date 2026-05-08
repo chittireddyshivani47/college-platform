@@ -6,7 +6,7 @@ export class AppError extends Error {
   constructor(message: string, statusCode: number) {
     super(message);
     this.statusCode = statusCode;
-    Error.captureStackTrace(this, this.constructor);
+    this.name = "AppError";
   }
 }
 
@@ -16,18 +16,15 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ) {
-  // Zod validation errors
   if (err instanceof ZodError) {
     const message = err.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ");
     return res.status(400).json({ success: false, message });
   }
 
-  // Our custom AppError
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({ success: false, message: err.message });
   }
 
-  // Prisma unique constraint violation (e.g. duplicate email)
   if (
     typeof err === "object" &&
     err !== null &&
@@ -37,7 +34,6 @@ export function errorHandler(
     return res.status(409).json({ success: false, message: "Record already exists" });
   }
 
-  // Unknown errors
   console.error("Unhandled error:", err);
   return res.status(500).json({ success: false, message: "Internal server error" });
 }

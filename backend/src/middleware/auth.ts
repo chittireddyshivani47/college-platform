@@ -6,7 +6,8 @@ export interface AuthRequest extends Request {
   userId?: string;
 }
 
-export function authenticate(req: AuthRequest, _res: Response, next: NextFunction) {
+export function authenticate(req: Request, _res: Response, next: NextFunction) {
+  const authReq = req as AuthRequest;
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -14,17 +15,17 @@ export function authenticate(req: AuthRequest, _res: Response, next: NextFunctio
   }
 
   const token = authHeader.split(" ")[1];
-
   const secret = process.env.JWT_SECRET;
+
   if (!secret) {
-    return next(new AppError("Server configuration error: JWT_SECRET not set", 500));
+    return next(new AppError("Server configuration error", 500));
   }
 
   try {
     const decoded = jwt.verify(token, secret) as { userId: string };
-    req.userId = decoded.userId;
+    authReq.userId = decoded.userId;
     next();
   } catch {
-    next(new AppError("Invalid or expired token. Please log in again.", 401));
+    next(new AppError("Invalid or expired token.", 401));
   }
 }
