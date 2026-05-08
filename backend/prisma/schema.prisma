@@ -1,0 +1,88 @@
+// This is your Prisma schema file
+// Learn more about it at https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String
+  password      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  savedColleges SavedCollege[]
+
+  @@map("users")
+}
+
+model College {
+  id                   String         @id @default(uuid())
+  name                 String
+  location             String
+  city                 String
+  state                String
+  fees                 Int            // Annual fees in INR
+  rating               Float          @default(0)
+  placementsPercentage Float          @default(0)
+  description          String
+  imageUrl             String
+  website              String?
+  phone                String?
+  email                String?
+  established          Int?
+  totalStudents        Int?
+  accreditation        String?        // e.g., "NAAC A+", "NBA"
+  type                 String         @default("Private") // Private / Government / Deemed
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  courses              Course[]
+  reviews              Review[]
+  savedBy              SavedCollege[]
+
+  @@map("colleges")
+}
+
+model Course {
+  id        String  @id @default(uuid())
+  name      String
+  duration  String  // e.g., "4 years", "2 years"
+  fees      Int     // Course-specific fees
+  seats     Int?
+  collegeId String
+  college   College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@map("courses")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Float
+  comment   String
+  author    String
+  batch     String?  // e.g., "2022"
+  course    String?  // Course the reviewer was in
+  collegeId String
+  createdAt DateTime @default(now())
+  college   College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+model SavedCollege {
+  id        String   @id @default(uuid())
+  userId    String
+  collegeId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college   College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collegeId])
+  @@map("saved_colleges")
+}
